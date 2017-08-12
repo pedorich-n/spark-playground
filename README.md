@@ -1,6 +1,7 @@
 # Spark-playground
 
 Some Spark Scala code to process text files for **Active Wizards** test task
+
 What it does:
 - Loads files from __/opt/activeWizards/input/*.txt__
 - Removes punctuation, numbers, linebreaks, whitespace sequences
@@ -9,8 +10,8 @@ What it does:
 - Lemmatizes __English__ words, leaves words of other languages as they are
 - Saves formatted and lemmatized text into __/opt/activeWizards/output/\*filename*.txt__
 - Counts word occurences with **CountVectorizer**
-- Picks top 30 keywords for file
-- And saves into __/opt/activeWizards/output/keywords/\*filename*.txt__
+- Takes top 30 keywords for file
+- Saves keywords into __/opt/activeWizards/output/keywords/\*filename*.txt__
 
 ### Used libraries
 - Spark Core
@@ -21,7 +22,8 @@ What it does:
 
 ### Possible improvements
 - Move to https://github.com/clulab/processors or other Scala wrapper for CoreNLP
-- Lemmatizer for non English languages. Possible tools:
+- Detect language with something like https://github.com/optimaize/language-detector or https://github.com/shuyo/language-detection
+- Lemmatizer for non-English languages. Possible tools:
   - https://github.com/languagetool-org/languagetool
   - ElasticSearch
 - Get rid of NotSerializableException from Pipeline somehow
