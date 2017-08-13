@@ -5,8 +5,9 @@ Some Spark Scala code to process text files for **Active Wizards** test task
 What it does:
 - Loads files from __/opt/activeWizards/input/*.txt__
 - Removes punctuation, numbers, linebreaks, whitespace sequences
+- Detects language
 - Tokenizes formatted text into words
-- Removes stopwords for *English*, *German* and *French* texts
+- Removes stopwords for detected languages
 - Lemmatizes __English__ words, leaves words of other languages as they are
 - Saves formatted and lemmatized text into __/opt/activeWizards/output/\*filename*.txt__
 - Counts word occurences with **CountVectorizer**
