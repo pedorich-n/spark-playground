@@ -1,8 +1,12 @@
 import java.io.{File, StringReader}
-import java.nio.file.{Paths, Files}
+import java.nio.file.{Files, Paths}
 import java.nio.charset.StandardCharsets
-import java.util.Properties
+import java.util.{Locale, Properties}
 
+import com.optimaize.langdetect.LanguageDetectorBuilder
+import com.optimaize.langdetect.ngram.NgramExtractors
+import com.optimaize.langdetect.profiles.LanguageProfileReader
+import com.optimaize.langdetect.text.CommonTextObjectFactories
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.ml.feature._
@@ -30,7 +34,7 @@ object main {
     //I could use \p{Punct}, but I also need to remove dashes, and I need to leave apostrophes, dots, question and exclamation marks
     val punctuationRegex = """["#$%&()*+,-\/:;<=>@\[\]^_{|}~–‒–—―]"""
 
-        val rootFolder = "/opt/activeWizards"
+    val rootFolder = "/opt/activeWizards"
     val inputFilesPath = s"$rootFolder/input/*.txt"
     val files = sc.wholeTextFiles(inputFilesPath)
 
@@ -46,14 +50,24 @@ object main {
         replaceAll("""\R""", "").          //Remove line breaks
         replaceAll("""^\s{1,}""", "")      //Remove whitespaces at the beginning of the line
 
+      /*
+         Language detection. Forced to put this inside map because of NotSerializableException
+         TODO: avoid somehow
+      */
+      val languageProfiles = new LanguageProfileReader().readAllBuiltIn
+      val languageDetector = LanguageDetectorBuilder.create(NgramExtractors.standard).withProfiles(languageProfiles).build
+      val textObjectFactory = CommonTextObjectFactories.forDetectingOnLargeText
+      val textObject = textObjectFactory.forText(cleared)
+      val locale = languageDetector.detect(textObject).get().getLanguage
+      val lang = new Locale(locale).getDisplayLanguage.toLowerCase
+
       //This will return Iterator of  sentences which is array of words
       val dp = new DocumentPreprocessor(new StringReader(cleared)).iterator()
 
       //By this I'm merging all of the words in sentence in one string
       val clearedSentence = dp.map(_.mkString(" "))
-      (key, clearedSentence.mkString(" ")) //Now we have map like (fileName -> "words from all sentences from file separated by space")
-    }.toDF("file", "sentence")
-
+      (key, clearedSentence.mkString(" "), lang) //Now we have map like (fileName -> "words from all sentences from file separated by space")
+    }.toDF("file", "sentence", "lang")
 
     /*
       According to the answer https://stackoverflow.com/a/44092036/5408933 by Stanford Professor
@@ -64,10 +78,17 @@ object main {
 
     val tokenized = tokenizer.transform(sentenceDF)
 
-    //Stop words arrays small enough to be merged in one array
-    val stopWords = StopWordsRemover.loadDefaultStopWords("english") ++
-      StopWordsRemover.loadDefaultStopWords("german") ++
-      StopWordsRemover.loadDefaultStopWords("french")
+    /*
+      Stop words arrays small enough to be merged in one array
+      Select distinct languages from DataFrame, and get stopwords for them
+    */
+    val stopWords = sentenceDF.
+      select("lang").
+      distinct().
+      rdd.
+      flatMap { row =>
+        StopWordsRemover.loadDefaultStopWords(row.getString(0))
+      }.collect()
 
     val remover = new StopWordsRemover().setInputCol("words").setOutputCol("filtered")
     remover.setStopWords(stopWords)

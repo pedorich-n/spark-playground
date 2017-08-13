@@ -17,13 +17,13 @@ What it does:
 - Spark Core
 - Spark MlLib
 - Spark SQL
+- [Optimaize/Language-detector](https://github.com/optimaize/language-detector)
 - Stanford CoreNLP with default model
 - Apache Kryo for Serialization in Spark
 
 ### Possible improvements
 - Move to https://github.com/clulab/processors or other Scala wrapper for CoreNLP
-- Detect language with something like https://github.com/optimaize/language-detector or https://github.com/shuyo/language-detection
 - Lemmatizer for non-English languages. Possible tools:
   - https://github.com/languagetool-org/languagetool
   - ElasticSearch
-- Get rid of NotSerializableException from Pipeline somehow
+- Get rid of NotSerializableException from Pipeline and LanguageDetector somehow
