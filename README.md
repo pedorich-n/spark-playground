@@ -26,5 +26,6 @@ What it does:
 - Move to https://github.com/clulab/processors or other Scala wrapper for CoreNLP
 - Lemmatizer for non-English languages. Possible tools:
   - https://github.com/languagetool-org/languagetool
+  - http://www.semanticsoftware.info/durm-german-lemmatizer
   - ElasticSearch
 - Get rid of NotSerializableException from Pipeline and LanguageDetector somehow
